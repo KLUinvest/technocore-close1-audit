@@ -1,0 +1,54 @@
+{
+  "audit": {
+    "close": "225.33",
+    "did": "did:key:z6MkmGZTwZzkTVxKgEmUCWBGmEWyZszcA2qLC9PfF7WucJTy",
+    "did_occurrences": 1,
+    "global_price": "224.66",
+    "reference": "225.21",
+    "sweep": 646,
+    "trade_id": "msea2d166ee04c17",
+    "trade_matches": [
+      {
+        "countersigner": "did:key:z6MkhTH7zUkPKnm3Sygr8gdBHi4Ek2nXV2GpG9Wm3bC4CRFN",
+        "input_index": 1063,
+        "outcome": "void",
+        "outcome_record": {
+          "id": "msea2d166ee04c17",
+          "outcome": "void",
+          "reason": "funds"
+        },
+        "reason": "funds",
+        "terms": {
+          "countersigner": "did:key:z6MkhTH7zUkPKnm3Sygr8gdBHi4Ek2nXV2GpG9Wm3bC4CRFN",
+          "id": "msea2d166ee04c17",
+          "maker": "did:key:z6MkmGZTwZzkTVxKgEmUCWBGmEWyZszcA2qLC9PfF7WucJTy",
+          "px": "225.21",
+          "qty": "5",
+          "side": "sell",
+          "taker": "any",
+          "until": 692
+        }
+      }
+    ]
+  },
+  "source": {
+    "base_url": "https://challenges.technocore.chat/close-1/",
+    "entry": {
+      "bytes": 3208126,
+      "file": "f96fda3bcb331ee7380fa4aac4d2ad1bcb3861c4bf6dfe23b2c5735d5a7ab8d7",
+      "n": 646,
+      "path": "redacted/f96fda3bcb331ee7380fa4aac4d2ad1bcb3861c4bf6dfe23b2c5735d5a7ab8d7.json",
+      "redacted": 316,
+      "sha256": "0285da2a47f6e8f79fff5dff7eb8dc71fb2b3a3e7b8f05b82a99ad622f77b9e1",
+      "status": "redacted"
+    }
+  },
+  "verification": {
+    "archive_hash_valid": true,
+    "expected_sha256": "0285da2a47f6e8f79fff5dff7eb8dc71fb2b3a3e7b8f05b82a99ad622f77b9e1",
+    "redacted_records": 316,
+    "sha256": "0285da2a47f6e8f79fff5dff7eb8dc71fb2b3a3e7b8f05b82a99ad622f77b9e1",
+    "signed_file_hash_verifiable": false,
+    "status": "redacted"
+  }
+}
