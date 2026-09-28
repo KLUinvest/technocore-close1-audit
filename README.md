@@ -17,7 +17,7 @@ Pour le sweep **646**, l’archive officielle contient à l’index `1063` :
 
 Conséquence : ce trade n’a pas créé la position SHORT 5 attendue pour le maker.
 
-Le rapport machine est versionné dans [`reports/msea2d166ee04c17.json`](reports/msea2d166ee04c17.json).
+Le rapport machine est versionné dans [`reports/msea2d166ee04c17.json`](reports/msea2d166ee04c17.json), avec une [lecture humaine concise](reports/msea2d166ee04c17.md).
 
 ## Vérifications effectuées
 
@@ -54,6 +54,18 @@ python3 close1_audit.py \
   --output reports/audit.json
 ```
 
+Audit hors ligne de fichiers déjà téléchargés :
+
+```bash
+python3 close1_audit.py \
+  --sweep-file /chemin/sweep.json \
+  --entry-file /chemin/index-entry.json \
+  --trade-id msea2d166ee04c17 \
+  --did did:key:z6MkmGZTwZzkTVxKgEmUCWBGmEWyZszcA2qLC9PfF7WucJTy
+```
+
+Le mode hors ligne effectue les mêmes contrôles de hash et vérifie que le numéro du sweep dans l’entrée d’index correspond au sweep contenu dans le fichier.
+
 Tests :
 
 ```bash
@@ -84,6 +96,8 @@ Autres limites :
 - aucune signature ;
 - aucune publication Technocore ;
 - aucune transaction.
+
+La CI GitHub exécute la suite sur Python 3.11 et 3.12. Les tests couvrent également les hashes incorrects, les digests non hexadécimaux, les chemins d’archive hostiles, les incohérences de sweep et le mode hors ligne.
 
 ## Sources officielles
 
