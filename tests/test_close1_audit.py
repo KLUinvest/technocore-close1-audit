@@ -26,7 +26,8 @@ class ArchiveAuditTests(unittest.TestCase):
         entry = {"status": "full", "file": digest, "path": f"sweeps/{digest}.json"}
         result = verify_archive_bytes(entry, raw)
         self.assertTrue(result["archive_hash_valid"])
-        self.assertTrue(result["signed_file_hash_verifiable"])
+        self.assertTrue(result["signed_file_preimage_available"])
+        self.assertFalse(result["referee_signature_verified"])
 
     def test_redacted_entry_verifies_archive_hash_but_not_signed_preimage(self):
         raw = b'{"input":{"trades":[{"redacted":"private room"}]},"output":{}}'
@@ -40,7 +41,8 @@ class ArchiveAuditTests(unittest.TestCase):
         }
         result = verify_archive_bytes(entry, raw)
         self.assertTrue(result["archive_hash_valid"])
-        self.assertFalse(result["signed_file_hash_verifiable"])
+        self.assertFalse(result["signed_file_preimage_available"])
+        self.assertFalse(result["referee_signature_verified"])
         self.assertEqual(result["redacted_records"], 1)
 
     def test_exact_trade_id_joins_input_and_output_by_index(self):
@@ -119,6 +121,19 @@ class ArchiveAuditTests(unittest.TestCase):
         record = {"input": {"n": 8, "trades": []}, "output": {"sweep": 9, "trades": []}}
         with self.assertRaisesRegex(ValueError, "sweep number"):
             audit_sweep_bytes(compact(record), trade_id=TRADE_ID, did=DID)
+
+    def test_input_and_output_market_values_must_agree(self):
+        cases = (
+            ("reference", {"ref": "225.20", "close": "225.33"}, {"reference": "225.21", "close": "225.33"}),
+            ("close", {"ref": "225.21", "close": "225.32"}, {"reference": "225.21", "close": "225.33"}),
+        )
+        for field, input_market, output_market in cases:
+            record = {
+                "input": {"n": 8, "trades": [], **input_market},
+                "output": {"sweep": 8, "trades": [], **output_market},
+            }
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, field):
+                audit_sweep_bytes(compact(record), trade_id=TRADE_ID, did=DID)
 
     def test_hash_mismatch_is_detected(self):
         entry = {"status": "full", "file": "a" * 64}
@@ -218,6 +233,33 @@ class ArchiveAuditTests(unittest.TestCase):
             entry_path.write_text(json.dumps(entry), encoding="utf-8")
             record_path.write_bytes(raw)
             with self.assertRaisesRegex(ValueError, "not found"):
+                audit_local_files(
+                    entry_file=entry_path,
+                    sweep_file=record_path,
+                    trade_id=TRADE_ID,
+                    did=DID,
+                )
+
+    def test_local_audit_rejects_unrelated_did(self):
+        import tempfile
+        from pathlib import Path
+
+        record = {
+            "input": {
+                "n": 646,
+                "trades": [{"id": TRADE_ID, "maker": "did:key:z6MkSomeoneElse"}],
+            },
+            "output": {"sweep": 646, "trades": [{"id": TRADE_ID, "outcome": "void"}]},
+        }
+        raw = compact(record)
+        entry = {"n": 646, "status": "full", "file": hashlib.sha256(raw).hexdigest()}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            entry_path = root / "entry.json"
+            record_path = root / "sweep.json"
+            entry_path.write_text(json.dumps(entry), encoding="utf-8")
+            record_path.write_bytes(raw)
+            with self.assertRaisesRegex(ValueError, "DID"):
                 audit_local_files(
                     entry_file=entry_path,
                     sweep_file=record_path,

@@ -76,10 +76,10 @@ python3 -m unittest discover -s tests -v
 
 L’archive distingue deux statuts :
 
-- `full` : les octets téléchargés peuvent être comparés directement au hash `file` engagé par le sweep signé ;
+- `full` : les octets téléchargés peuvent être comparés directement au champ `file` fourni par l’index officiel et décrit comme le hash engagé par le sweep signé ;
 - `redacted` : des trades de rooms privées sont remplacés. Le fichier public modifié ne peut donc plus être comparé au hash signé `file`; son intégrité est vérifiée contre le champ `sha256` de l’index public.
 
-Le sweep 646 est **redacted** (`316` entrées). Le rapport vérifie correctement le hash public `0285da2a…f77b9e1`, mais indique explicitement `signed_file_hash_verifiable: false`. L’outil ne présente donc pas ce fichier redacted comme le préimage exact du hash signé original.
+Le sweep 646 est **redacted** (`316` entrées). Le rapport vérifie correctement le hash public `0285da2a…f77b9e1`, indique `signed_file_preimage_available: false` et `referee_signature_verified: false`. L’outil ne présente donc ni ce fichier redacted comme le préimage exact du hash signé original, ni le contrôle de hash comme une vérification de signature du referee.
 
 Autres limites :
 
@@ -87,6 +87,8 @@ Autres limites :
 - l’outil vérifie un sweep demandé, pas l’historique complet d’un compte ;
 - une entrée privée redacted ne peut pas être reconstituée ;
 - la confiance dans un fichier redacted dépend de l’index servi par l’archive officielle.
+
+Le mode réseau marque sa provenance `official_https_index`. En mode hors ligne, l’entrée d’index est fournie par l’utilisateur et marquée `local_unverified_entry` : le résultat prouve alors la cohérence entre les fichiers locaux, pas leur provenance officielle.
 
 ## Sécurité
 

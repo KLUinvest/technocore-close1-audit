@@ -41,14 +41,16 @@
       "redacted": 316,
       "sha256": "0285da2a47f6e8f79fff5dff7eb8dc71fb2b3a3e7b8f05b82a99ad622f77b9e1",
       "status": "redacted"
-    }
+    },
+    "provenance": "official_https_index"
   },
   "verification": {
     "archive_hash_valid": true,
     "expected_sha256": "0285da2a47f6e8f79fff5dff7eb8dc71fb2b3a3e7b8f05b82a99ad622f77b9e1",
     "redacted_records": 316,
+    "referee_signature_verified": false,
     "sha256": "0285da2a47f6e8f79fff5dff7eb8dc71fb2b3a3e7b8f05b82a99ad622f77b9e1",
-    "signed_file_hash_verifiable": false,
+    "signed_file_preimage_available": false,
     "status": "redacted"
   }
 }

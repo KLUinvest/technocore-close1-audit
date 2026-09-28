@@ -47,7 +47,8 @@ def verify_archive_bytes(entry: dict[str, Any], raw: bytes) -> dict[str, Any]:
         "sha256": actual,
         "expected_sha256": expected,
         "archive_hash_valid": actual == expected,
-        "signed_file_hash_verifiable": signed_verifiable,
+        "signed_file_preimage_available": signed_verifiable,
+        "referee_signature_verified": False,
         "redacted_records": int(entry.get("redacted", 0) or 0),
     }
 
@@ -78,6 +79,12 @@ def audit_sweep_bytes(raw: bytes, *, trade_id: str, did: str) -> dict[str, Any]:
     output_sweep = sweep_output.get("sweep")
     if not isinstance(input_sweep, int) or input_sweep != output_sweep:
         raise ValueError("input/output sweep numbers disagree")
+    if sweep_input.get("ref") is not None and sweep_output.get("reference") is not None:
+        if sweep_input["ref"] != sweep_output["reference"]:
+            raise ValueError("input/output reference values disagree")
+    if sweep_input.get("close") is not None and sweep_output.get("close") is not None:
+        if sweep_input["close"] != sweep_output["close"]:
+            raise ValueError("input/output close values disagree")
 
     for input_trade, output_trade in zip(inputs, outputs):
         if not isinstance(input_trade, dict) or not isinstance(output_trade, dict):
@@ -118,6 +125,15 @@ def audit_sweep_bytes(raw: bytes, *, trade_id: str, did: str) -> dict[str, Any]:
     }
 
 
+def _validate_requested_evidence(audit: dict[str, Any], trade_id: str) -> None:
+    matches = audit["trade_matches"]
+    if not matches:
+        raise ValueError(f"trade id {trade_id!r} not found in sweep {audit['sweep']}")
+    did = audit["did"]
+    if not any(_count_exact(match["terms"], did) for match in matches):
+        raise ValueError(f"requested DID is unrelated to trade id {trade_id!r}")
+
+
 def _get(url: str) -> bytes:
     parsed = urllib.parse.urlsplit(url)
     if parsed.scheme != "https" or parsed.hostname != ALLOWED_HOST:
@@ -153,9 +169,16 @@ def fetch_and_audit(*, sweep: int, trade_id: str, did: str) -> dict[str, Any]:
     audit = audit_sweep_bytes(raw, trade_id=trade_id, did=did)
     if entry.get("n") != audit["sweep"]:
         raise ValueError("archive entry and record disagree on sweep number")
-    if not audit["trade_matches"]:
-        raise ValueError(f"trade id {trade_id!r} not found in sweep {sweep}")
-    return {"source": {"base_url": BASE_URL, "entry": entry}, "verification": verification, "audit": audit}
+    _validate_requested_evidence(audit, trade_id)
+    return {
+        "source": {
+            "provenance": "official_https_index",
+            "base_url": BASE_URL,
+            "entry": entry,
+        },
+        "verification": verification,
+        "audit": audit,
+    }
 
 
 def audit_local_files(
@@ -172,10 +195,10 @@ def audit_local_files(
     audit = audit_sweep_bytes(raw, trade_id=trade_id, did=did)
     if entry.get("n") != audit["sweep"]:
         raise ValueError("archive entry and record disagree on sweep number")
-    if not audit["trade_matches"]:
-        raise ValueError(f"trade id {trade_id!r} not found in sweep {audit['sweep']}")
+    _validate_requested_evidence(audit, trade_id)
     return {
         "source": {
+            "provenance": "local_unverified_entry",
             "entry_file": str(Path(entry_file)),
             "sweep_file": str(Path(sweep_file)),
             "entry": entry,
